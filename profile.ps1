@@ -90,7 +90,7 @@ Function BashWhich()
   $command = Get-Command $CommandName
   if ($command -ne $null)
   {
-    Write-Host $command.Name
+    return $command.Name
   }
 }
 Set-Alias which BashWhich -Option Constant
