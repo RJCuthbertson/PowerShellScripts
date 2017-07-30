@@ -48,10 +48,15 @@ Function Install-File()
 
     [Parameter(
       Mandatory=$false,
-      ValueFromPipeline=$true,
       ValueFromPipelineByPropertyName=$true)]
     [bool]
-    $AllowOverwrite = $true
+    $AllowOverwrite = $true,
+
+    [Parameter(
+      Mandatory=$false,
+      ValueFromPipelineByPropertyName=$true)]
+    [bool]
+    $AllowAppend = $false
   )
 
   if ([string]::IsNullOrEmpty($CopyMessage))
@@ -94,6 +99,25 @@ Function Install-File()
         New-Item -Path $filePath -Type file -Force > $null
         Get-Content ".\$FileName" > $filePath
       }
+      elseif ($AllowAppend)
+      {
+        $append = Read-Host "Append? Yes (Y), or No (N)"
+        while ($append -ine 'Y' -and $append -ine 'N')
+        {
+          Write-Host "Invalid Input ($append)..."
+          Write-Host
+          $overwrite = Read-Host 'Append? Yes (Y), or No (N)'
+          Write-Host
+        }
+
+        if ($append -ieq 'Y')
+        {
+          Write-Host 'Now appending file contents'
+          Write-Host $CopyMessage
+          [System.Environment]::NewLine >> $filePath
+          Get-Content ".\$FileName" >> $filePath
+        }
+      }
 
       Write-Host
     }
@@ -104,7 +128,8 @@ Write-Host
 
 Install-File 'profile.ps1'`
   -CopyMessage 'Copying Profile Initialization Script'`
-  -OverwriteMessage 'Overwriting Profile Initialization Script'
+  -OverwriteMessage 'Overwriting Profile Initialization Script'`
+  -AllowAppend $true
 Install-File 'Common.ps1'
 Install-File 'Regex.ps1'
 
