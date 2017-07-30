@@ -90,6 +90,23 @@ try
   Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
   Set-Alias regex $regexCmdletName -Option Constant
 
+  Write-Host 'Creating Alias "touch" as cmdlet "New-Item -Path {arg} -Type file"'
+  Function BashTouch()
+  {
+    Param (
+      [Parameter(
+        Mandatory=$true,
+        Position=0,
+        ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      [string]
+      $FilePath
+    )
+
+    New-Item -Path $FilePath -Type file
+  }
+  Set-Alias touch BashTouch -Option Constant
+
   Write-Host 'Creating Alias "which" as cmdlet "(Get-Command {arg}).Name"'
   Function BashWhich()
   {
