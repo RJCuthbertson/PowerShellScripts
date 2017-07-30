@@ -25,6 +25,7 @@ Function Pause-Script()
     }
     catch [System.NotImplementedException]
     {
+      # ReadKey throws an NIE when user interaction is not intended
     }
   }
 
