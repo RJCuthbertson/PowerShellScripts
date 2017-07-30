@@ -50,7 +50,8 @@ Function Run-RegexMatchLoop
 
   [CmdletBinding()]
   Param (
-    [Parameter(Position=0,
+    [Parameter(
+      Position=0,
       ValueFromPipeline=$true,
       ValueFromPipelineByPropertyName=$true)]
     [string]
