@@ -95,6 +95,15 @@ Function BashWhich()
 }
 Set-Alias which BashWhich -Option Constant
 
+# Cheap trick to determine if the NuGet PowerShell CLI is loaded in this shell
+$isNuGetCLILoaded = ![string]::IsNullOrEmpty((which Open-PackagePage 2> $null))
+if ($isNuGetCLILoaded)
+{
+  Write-Host
+  Write-Host 'NuGet Package Manager Console detected.'
+  # TODO: add NuGet PowerShell shortcuts
+}
+
 Write-Host
 
 $vsCodeInstallLocation = Get-ProgramInstallLocation('Visual Studio Code')
