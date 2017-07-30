@@ -22,120 +22,146 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #>
 
-Function Get-ProgramInstallLocation($programName)
+try
 {
-  $thirtyTwoBitInstalls = `
-    Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
-    Select-Object DisplayName, InstallLocation
-
-  $sixtyFourBitInstalls = `
-  Get-ItemProperty 'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
-    Select-Object DisplayName, InstallLocation
-
-  $allInstalls = $thirtyTwoBitInstalls + $sixtyFourBitInstalls
-
-  ForEach ($install in $allInstalls)
+  Function Get-ProgramInstallLocation($programName)
   {
-    if (![string]::IsNullOrEmpty($install.DisplayName))
+    $thirtyTwoBitInstalls = `
+      Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
+      Select-Object DisplayName, InstallLocation
+
+    $sixtyFourBitInstalls = `
+    Get-ItemProperty 'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
+      Select-Object DisplayName, InstallLocation
+
+    $allInstalls = $thirtyTwoBitInstalls + $sixtyFourBitInstalls
+
+    ForEach ($install in $allInstalls)
     {
-      $name = $install.DisplayName
-      if ($name.Contains($programName))
+      if (![string]::IsNullOrEmpty($install.DisplayName))
       {
-        return $install.InstallLocation
+        $name = $install.DisplayName
+        if ($name.Contains($programName))
+        {
+          return $install.InstallLocation
+        }
       }
     }
   }
-}
 
-$terminal = $Host.UI.RawUI
-
-$initialTerminalWindowTitle = $terminal.WindowTitle
-$terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initializing..."
-
-$terminal.BackgroundColor = 'Black'
-$terminal.ForegroundColor = 'Green'
-
-Write-Host
-Write-Host ' PowerShell Profile Initialization'
-Write-Host 'Copyright (C) 2017 - RJ Cuthbertson'
-Write-Host '-----------------------------------'
-
-Write-Host 'Removing Alias "curl"'
-Remove-Item alias:curl
-
-Write-Host 'Creating Alias "dirs" as "Get-Location -Stack"'
-Function BashDirs { Get-Location -Stack }
-Set-Alias dirs BashDirs -Option Constant
-
-$regexCmdletName = 'Run-RegexMatchLoop'
-$regexScriptName = 'Regex.ps1'
-$regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
-. $regexScriptPath
-Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
-Set-Alias regex $regexCmdletName -Option Constant
-
-Write-Host 'Creating Alias "which" as cmdlet "(Get-Command {arg}).Name"'
-Function BashWhich()
-{
-  Param (
-    [Parameter(
-      Mandatory=$true,
-      Position=0,
-      ValueFromPipeline=$true)]
-    [ValidateNotNullOrEmpty()]
-    [string]
-    $CommandName
-  )
-
-  $command = Get-Command $CommandName
-  if ($command -ne $null)
+  $areCommonScriptsLoaded = $false
+  $commonScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\Common.ps1"
+  if (Test-Path $commonScriptPath -PathType Leaf)
   {
-    return $command.Name
+    . $commonScriptPath
+    $areCommonScriptsLoaded = $true
   }
-}
-Set-Alias which BashWhich -Option Constant
 
-# Cheap trick to determine if the NuGet PowerShell CLI is loaded in this shell
-$isNuGetCLILoaded = ![string]::IsNullOrEmpty((which Open-PackagePage 2> $null))
-if ($isNuGetCLILoaded)
-{
+  $terminal = $Host.UI.RawUI
+
+  $initialTerminalWindowTitle = $terminal.WindowTitle
+  $terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initializing..."
+
+  $terminal.BackgroundColor = 'Black'
+  $terminal.ForegroundColor = 'Green'
+
   Write-Host
-  Write-Host 'NuGet Package Manager Console detected.'
-  # TODO: add NuGet PowerShell shortcuts
-}
+  Write-Host ' PowerShell Profile Initialization'
+  Write-Host 'Copyright (C) 2017 - RJ Cuthbertson'
+  Write-Host '-----------------------------------'
 
-Write-Host
+  Write-Host 'Removing Alias "curl"'
+  Remove-Item alias:curl
 
-$vsCodeInstallLocation = Get-ProgramInstallLocation('Visual Studio Code')
-if (![string]::IsNullOrEmpty($vsCodeInstallLocation))
-{
-  Write-Host 'Visual Studio Code is installed.'
-
-  $vsCodePath = $vsCodeInstallLocation + 'Code.exe'
-  if (Test-Path $vsCodePath -PathType Leaf)
+  if ($areCommonScriptsLoaded)
   {
-    Write-Host 'Creating Alias "code" as shortcut to VS Code'
-    Set-Alias code $vsCodePath -Option Constant
+    Write-Host 'Creating Alias "clw" as "Clear-Workspace"'
+    Set-Alias clw Clear-Workspace -Option Constant
+  }
 
-    Write-Host 'Creating Alias "vscode" as shortcut to VS Code'
-    Set-Alias vscode $vsCodePath -Option Constant
+  Write-Host 'Creating Alias "dirs" as "Get-Location -Stack"'
+  Function BashDirs { Get-Location -Stack }
+  Set-Alias dirs BashDirs -Option Constant
+
+  $regexCmdletName = 'Run-RegexMatchLoop'
+  $regexScriptName = 'Regex.ps1'
+  $regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
+  . $regexScriptPath
+  Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
+  Set-Alias regex $regexCmdletName -Option Constant
+
+  Write-Host 'Creating Alias "which" as cmdlet "(Get-Command {arg}).Name"'
+  Function BashWhich()
+  {
+    Param (
+      [Parameter(
+        Mandatory=$true,
+        Position=0,
+        ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      [string]
+      $CommandName
+    )
+
+    $command = Get-Command $CommandName
+    if ($command -ne $null)
+    {
+      return $command.Name
+    }
+  }
+  Set-Alias which BashWhich -Option Constant
+
+  # Cheap trick to determine if the NuGet PowerShell CLI is loaded in this shell
+  $isNuGetCLILoaded = ![string]::IsNullOrEmpty((which Open-PackagePage 2> $null))
+  if ($isNuGetCLILoaded)
+  {
+    Write-Host
+    Write-Host 'NuGet Package Manager Console detected.'
+    # TODO: add NuGet PowerShell shortcuts
+  }
+
+  Write-Host
+
+  $vsCodeInstallLocation = Get-ProgramInstallLocation('Visual Studio Code')
+  if (![string]::IsNullOrEmpty($vsCodeInstallLocation))
+  {
+    Write-Host 'Visual Studio Code is installed.'
+
+    $vsCodePath = $vsCodeInstallLocation + 'Code.exe'
+    if (Test-Path $vsCodePath -PathType Leaf)
+    {
+      Write-Host 'Creating Alias "code" as shortcut to VS Code'
+      Set-Alias code $vsCodePath -Option Constant
+
+      Write-Host 'Creating Alias "vscode" as shortcut to VS Code'
+      Set-Alias vscode $vsCodePath -Option Constant
+    }
+    else
+    {
+      Write-Host 'Visual Studio Code is installed, but the executable path could not be resolved.'
+    }
   }
   else
   {
-    Write-Host 'Visual Studio Code is installed, but the executable path could not be resolved.'
+    Write-Host 'Visual Studio Code is not installed.'
   }
+
+  Write-Host
+
+  if ($areCommonScriptsLoaded)
+  {
+    Pause-Script
+  }
+
+  $terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initialized"
 }
-else
+catch
 {
-  Write-Host 'Visual Studio Code is not installed.'
+  $errorLogPath = "$env:USERPROFILE\My Documents\ProfileScriptErrors.log"
+  if (!(Test-Path $errorLogPath -PathType Leaf))
+  {
+    New-Item -Path $errorLogPath -Type file -Force > $null
+  }
+
+  $_ >> $errorLogPath
 }
-
-Write-Host
-
-# TODO: consider moving this "clean press any key" to a shared function; Common.ps1? Utility.ps1?
-Write-Host
-Write-Host -NoNewline 'Press any key to continue...'
-$x = $terminal.ReadKey('NoEcho,IncludeKeyDown')
-Clear-Host
-
-$terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initialized"
