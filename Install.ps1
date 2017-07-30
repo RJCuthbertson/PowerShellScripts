@@ -22,74 +22,101 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #>
 
-$doesProfileExist = Test-Path $PROFILE.CurrentUserAllHosts
-if (!$doesProfileExist)
+Function Install-File()
 {
-  Write-Host
-  Write-Host 'Copying Profile Initialization Script'
-  New-Item -Path $PROFILE.CurrentUserAllHosts -Type file -Force > $null
-  Get-Content '.\profile.ps1' > $PROFILE.CurrentUserAllHosts
-}
-else
-{
-  Write-Host
-  Write-Host 'A Profile Initialization Script already exists.'
-  Write-Host 'Would you like to overwrite? Otherwise, the profile.ps1 contents will be appended to the existent file.'
-  Write-Host
+  Param (
+    [Parameter(
+      Mandatory=$true,
+      Position=0,
+      ValueFromPipeline=$true,
+      ValueFromPipelineByPropertyName=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $FileName,
 
-  $overwrite = Read-Host "Overwrite? Yes (Y), or No (N)"
-  while ($overwrite -ine 'Y' -and $overwrite -ine 'N')
+    [Parameter(
+      Mandatory=$false,
+      ValueFromPipelineByPropertyName=$true)]
+    [string]
+    $CopyMessage = $null,
+
+    [Parameter(
+      Mandatory=$false,
+      ValueFromPipelineByPropertyName=$true)]
+    [string]
+    $OverwriteMessage = $null,
+
+    [Parameter(
+      Mandatory=$false,
+      ValueFromPipeline=$true,
+      ValueFromPipelineByPropertyName=$true)]
+    [bool]
+    $AllowOverwrite = $true
+  )
+
+  if ([string]::IsNullOrEmpty($CopyMessage))
   {
-    Write-Host "Invalid Input ($overwrite)..."
-    Write-Host
-    $overwrite = Read-Host 'Overwrite? Yes (Y), or No (N)'
+    $CopyMessage = "Copying File ""$FileName"""
   }
 
-  if ($overwrite -ieq 'Y')
+  if ([string]::IsNullOrEmpty($OverwriteMessage))
   {
+    $OverwriteMessage = "Overwriting File ""$FileName"""
+  }
+
+  $filePath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$FileName"
+  if (!(Test-Path $filePath -PathType Leaf))
+  {
+    Write-Host $CopyMessage
+    New-Item -Path $FilePath -Type file -Force > $null
+    Get-Content ".\$FileName" > $filePath
     Write-Host
-    Write-Host 'Overwriting Profile Initialization Script'
-    New-Item -Path $PROFILE.CurrentUserAllHosts -Type file -Force > $null
-    Get-Content '.\profile.ps1' > $PROFILE.CurrentUserAllHosts
   }
   else
   {
+    Write-Host "File ""$FileName"" already exists."
     Write-Host
-    Write-Host 'Appending Profile Initialization Script to existent profile customizations'
-    Get-Content '.\profile.ps1' >> $PROFILE.CurrentUserAllHosts
+
+    if ($AllowOverwrite)
+    {
+      $overwrite = Read-Host "Overwrite? Yes (Y), or No (N)"
+      while ($overwrite -ine 'Y' -and $overwrite -ine 'N')
+      {
+        Write-Host "Invalid Input ($overwrite)..."
+        Write-Host
+        $overwrite = Read-Host 'Overwrite? Yes (Y), or No (N)'
+        Write-Host
+      }
+
+      if ($overwrite -ieq 'Y')
+      {
+        Write-Host $OverwriteMessage
+        New-Item -Path $filePath -Type file -Force > $null
+        Get-Content ".\$FileName" > $filePath
+      }
+
+      Write-Host
+    }
   }
 }
 
-$regexScriptName = 'Regex.ps1'
-$regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
-if (!(Test-Path $regexScriptPath -PathType Leaf))
-{
-  Write-Host
-  Write-Host "Copying Script ""$regexScriptName"""
-  New-Item -Path $regexScriptPath -Type file -Force > $null
-  Get-Content '.\Regex.ps1' > $regexScriptPath
-}
-
-$wordlistPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\DefaultWordlist.txt"
-if (!(Test-Path $wordlistPath -PathType Leaf))
-{
-  Write-Host
-  Write-Host 'Copying Default Wordlist'
-  New-Item -Path $wordlistPath -Type file -Force > $null
-  Get-Content '.\DefaultWordlist.txt' > $wordlistPath
-}
-
-$licensePath = "$env:USERPROFILE\My Documents\WindowsPowerShell\LICENSE"
-if (!(Test-Path $licensePath -PathType Leaf))
-{
-  Write-Host
-  Write-Host 'Copying GNU General Public License'
-  New-Item -Path $licensePath -Type file -Force > $null
-  Get-Content '.\LICENSE' > $licensePath
-}
-
-# TODO: consider moving this "clean press any key" to a shared function; Common.ps1? Utility.ps1?
 Write-Host
-Write-Host -NoNewline 'Press any key to continue...'
-$x = $terminal.ReadKey('NoEcho,IncludeKeyDown')
-Clear-Host
+
+Install-File 'profile.ps1'`
+  -CopyMessage 'Copying Profile Initialization Script'`
+  -OverwriteMessage 'Overwriting Profile Initialization Script'
+Install-File 'Common.ps1'
+Install-File 'Regex.ps1'
+
+Install-File 'DefaultWordlist.txt'`
+  -CopyMessage 'Copying Default Wordlist'`
+  -AllowOverwrite $false
+Install-File 'LICENSE'`
+  -CopyMessage 'Copying GNU General Public License'`
+  -AllowOverwrite $false
+
+if (Test-Path $commonScriptPath -PathType Leaf)
+{
+  . $commonScriptPath
+  Pause-Script
+}
