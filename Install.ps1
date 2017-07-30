@@ -36,6 +36,7 @@ else
   Write-Host 'A Profile Initialization Script already exists.'
   Write-Host 'Would you like to overwrite? Otherwise, the profile.ps1 contents will be appended to the existent file.'
   Write-Host
+
   $overwrite = Read-Host "Overwrite? Yes (Y), or No (N)"
   while ($overwrite -ine 'Y' -and $overwrite -ine 'N')
   {
@@ -87,7 +88,8 @@ if (!(Test-Path $licensePath -PathType Leaf))
   Get-Content '.\LICENSE' > $licensePath
 }
 
+# TODO: consider moving this "clean press any key" to a shared function; Common.ps1? Utility.ps1?
 Write-Host
-Write-Host -NoNewline "Press any key to continue..."
-$x = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+Write-Host -NoNewline 'Press any key to continue...'
+$x = $terminal.ReadKey('NoEcho,IncludeKeyDown')
 Clear-Host

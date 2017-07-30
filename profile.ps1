@@ -22,13 +22,38 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #>
 
+Function Get-ProgramInstallLocation($programName)
+{
+  $thirtyTwoBitInstalls = `
+    Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
+    Select-Object DisplayName, InstallLocation
+
+  $sixtyFourBitInstalls = `
+  Get-ItemProperty 'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
+    Select-Object DisplayName, InstallLocation
+
+  $allInstalls = $thirtyTwoBitInstalls + $sixtyFourBitInstalls
+
+  ForEach ($install in $allInstalls)
+  {
+    if (![string]::IsNullOrEmpty($install.DisplayName))
+    {
+      $name = $install.DisplayName
+      if ($name.Contains($programName))
+      {
+        return $install.InstallLocation
+      }
+    }
+  }
+}
+
 $terminal = $Host.UI.RawUI
 
 $initialTerminalWindowTitle = $terminal.WindowTitle
 $terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initializing..."
 
-$terminal.BackgroundColor = "Black"
-$terminal.ForegroundColor = "Green"
+$terminal.BackgroundColor = 'Black'
+$terminal.ForegroundColor = 'Green'
 
 Write-Host
 Write-Host ' PowerShell Profile Initialization'
@@ -42,17 +67,45 @@ Write-Host 'Creating Alias "dirs" as "Get-Location -Stack"'
 Function BashDirs { Get-Location -Stack }
 Set-Alias dirs BashDirs -Option Constant
 
-$regexCmdletName = "Run-RegexMatchLoop"
-$regexScriptName = "Regex.ps1"
+$regexCmdletName = 'Run-RegexMatchLoop'
+$regexScriptName = 'Regex.ps1'
 $regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
 . $regexScriptPath
 Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
 Set-Alias regex $regexCmdletName
 
+Write-Host
+
+$vsCodeInstallLocation = Get-ProgramInstallLocation('Visual Studio Code')
+if (![string]::IsNullOrEmpty($vsCodeInstallLocation))
+{
+  Write-Host 'Visual Studio Code is installed.'
+
+  $vsCodePath = $vsCodeInstallLocation + 'Code.exe'
+  if (Test-Path $vsCodePath -PathType Leaf)
+  {
+    Write-Host 'Creating Alias "code" as shortcut to VS Code'
+    Set-Alias code $vsCodePath
+
+    Write-Host 'Creating Alias "vscode" as shortcut to VS Code'
+    Set-Alias vscode $vsCodePath
+  }
+  else
+  {
+    Write-Host 'Visual Studio Code is installed, but the executable path could not be resolved.'
+  }
+}
+else
+{
+  Write-Host 'Visual Studio Code is not installed.'
+}
+
+Write-Host
+
 # TODO: consider moving this "clean press any key" to a shared function; Common.ps1? Utility.ps1?
 Write-Host
-Write-Host -NoNewline "Press any key to continue..."
-$x = $terminal.ReadKey("NoEcho,IncludeKeyDown")
+Write-Host -NoNewline 'Press any key to continue...'
+$x = $terminal.ReadKey('NoEcho,IncludeKeyDown')
 Clear-Host
 
 $terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initialized"
