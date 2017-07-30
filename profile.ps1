@@ -72,7 +72,28 @@ $regexScriptName = 'Regex.ps1'
 $regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
 . $regexScriptPath
 Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
-Set-Alias regex $regexCmdletName
+Set-Alias regex $regexCmdletName -Option Constant
+
+Write-Host 'Creating Alias "which" as cmdlet "(Get-Command {arg}).Name"'
+Function BashWhich()
+{
+  Param (
+    [Parameter(
+      Mandatory=$true,
+      Position=0,
+      ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $CommandName
+  )
+
+  $command = Get-Command $CommandName
+  if ($command -ne $null)
+  {
+    Write-Host $command.Name
+  }
+}
+Set-Alias which BashWhich -Option Constant
 
 Write-Host
 
@@ -85,10 +106,10 @@ if (![string]::IsNullOrEmpty($vsCodeInstallLocation))
   if (Test-Path $vsCodePath -PathType Leaf)
   {
     Write-Host 'Creating Alias "code" as shortcut to VS Code'
-    Set-Alias code $vsCodePath
+    Set-Alias code $vsCodePath -Option Constant
 
     Write-Host 'Creating Alias "vscode" as shortcut to VS Code'
-    Set-Alias vscode $vsCodePath
+    Set-Alias vscode $vsCodePath -Option Constant
   }
   else
   {
