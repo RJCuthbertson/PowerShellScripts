@@ -140,6 +140,7 @@ Install-File 'LICENSE'`
   -CopyMessage 'Copying GNU General Public License'`
   -AllowOverwrite $false
 
+$commonScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\Common.ps1"
 if (Test-Path $commonScriptPath -PathType Leaf)
 {
   . $commonScriptPath
