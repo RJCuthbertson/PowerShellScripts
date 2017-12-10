@@ -141,16 +141,16 @@ Install-File 'profile.ps1'`
   -CopyMessage 'Copying Profile Initialization Script'`
   -OverwriteMessage 'Overwriting Profile Initialization Script'`
   -AllowAppend $true
-Install-File 'Common.ps1'
+Install-File 'CommonUX.ps1'
 Install-File 'Regex.ps1'
 
 Install-File 'DefaultWordlist.txt'`
   -CopyMessage 'Copying Default Wordlist'`
   -AllowOverwrite $false
 
-$commonScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\Common.ps1"
-if (Test-Path $commonScriptPath -PathType Leaf)
+$commonUxScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\CommonUX.ps1"
+if (Test-Path $commonUxScriptPath -PathType Leaf)
 {
-  . $commonScriptPath
+  . $commonUxScriptPath
   Suspend-Script
 }

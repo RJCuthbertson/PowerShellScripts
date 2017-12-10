@@ -49,12 +49,12 @@ try
     }
   }
 
-  $areCommonScriptsLoaded = $false
-  $commonScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\Common.ps1"
-  if (Test-Path $commonScriptPath -PathType Leaf)
+  $areCommonUxScriptsLoaded = $false
+  $commonUxScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\CommonUX.ps1"
+  if (Test-Path $commonUxScriptPath -PathType Leaf)
   {
-    . $commonScriptPath
-    $areCommonScriptsLoaded = $true
+    . $commonUxScriptPath
+    $areCommonUxScriptsLoaded = $true
   }
 
   $terminal = $Host.UI.RawUI
@@ -73,7 +73,7 @@ try
   Write-Host 'Removing Alias "curl"'
   Remove-Item alias:curl
 
-  if ($areCommonScriptsLoaded)
+  if ($areCommonUxScriptsLoaded)
   {
     Write-Host 'Creating Alias "clw" as "Clear-Workspace"'
     Set-Alias clw Clear-Workspace -Option Constant
@@ -208,7 +208,7 @@ try
 
   Write-Host
 
-  if ($areCommonScriptsLoaded)
+  if ($areCommonUxScriptsLoaded)
   {
     Suspend-Script
   }

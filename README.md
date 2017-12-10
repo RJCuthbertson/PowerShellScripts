@@ -10,7 +10,7 @@ A short explanation of the files in this repository follows:
 
 ### **Scripts (`\.ps1$`)**
 
-* **Common.ps1:**
+* **CommonUX.ps1:**
   This file is for general purpose, utility functions intended to be used throughout the other scripts in this repository. Functions in this file handle display formatting and / or presentation, and are placed here to allow for a consistent UX across the other scripts in this repository.
 
 * **Install.ps1:**
