@@ -48,8 +48,6 @@ Function Suspend-Script()
     {
       Write-Host -NoNewline 'Press any key to continue...'
       $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-      Write-Host
-      Write-Host
     }
     catch [System.NotImplementedException]
     {
@@ -57,5 +55,6 @@ Function Suspend-Script()
     }
   }
 
+  Write-Host
   Clear-Workspace
 }
