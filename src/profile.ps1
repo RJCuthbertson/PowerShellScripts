@@ -107,7 +107,7 @@ try
   }
   Set-Alias touch BashTouch -Option Constant
 
-  Write-Host 'Creating Alias "which" as cmdlet "(Get-Command {arg}).Name"'
+  Write-Host 'Creating Alias "which" as use of cmdlet "Get-Command"'
   Function BashWhich()
   {
     Param (
@@ -117,24 +117,67 @@ try
         ValueFromPipeline=$true)]
       [ValidateNotNullOrEmpty()]
       [string]
-      $CommandName
+      $CommandName,
+
+      [Parameter(
+        Mandatory=$false,
+        ValueFromPipelineByPropertyName=$true)]
+      [Alias('a', 'all')]
+      [switch]
+      $GetAll
     )
 
-    $command = Get-Command $CommandName
-    if ($command -ne $null)
+    $results = Get-Command $CommandName 2>$null
+    if ($results -eq $null)
     {
-      return $command.Name
+      return $null
+    }
+
+    if ($results.Count -eq 1)
+    {
+      return $results.Name
+    }
+    else
+    {
+      if ($GetAll)
+      {
+        $compoundResult = ''
+        foreach ($result in $results)
+        {
+          $compoundResult = $compoundResult + "$($result.Source)\$($result.Name);"
+        }
+
+        return $compoundResult
+      }
+
+      $firstResult = $results[0]
+      return "$($firstResult.Source)\$($firstResult.Name)"
     }
   }
   Set-Alias which BashWhich -Option Constant
 
   # Cheap trick to determine if the NuGet PowerShell CLI is loaded in this shell
-  $isNuGetCLILoaded = ![string]::IsNullOrEmpty((which Open-PackagePage 2> $null))
+  $isNuGetCLILoaded = !!(which Open-PackagePage)
   if ($isNuGetCLILoaded)
   {
     Write-Host
     Write-Host 'NuGet Package Manager Console detected.'
     # TODO: add NuGet PowerShell shortcuts
+  }
+
+  Write-Host
+
+  if (Get-Module -ListAvailable -Name posh-docker)
+  {
+    if (Get-Module -Name posh-docker)
+    {
+      Write-Host 'The Posh Docker Module has already been imported.'
+    }
+    else
+    {
+      Import-Module posh-docker
+      Write-Host 'The Posh Docker Module has been imported.'
+    }
   }
 
   Write-Host
@@ -160,7 +203,7 @@ try
   }
   else
   {
-    Write-Host 'Visual Studio Code is not installed.'
+    Write-Host 'Visual Studio Code is not installed, or is not available to this shell.'
   }
 
   Write-Host
