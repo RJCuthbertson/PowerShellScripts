@@ -38,7 +38,7 @@ Function Clear-Workspace()
   }
 }
 
-Function Pause-Script()
+Function Suspend-Script()
 {
   # The PowerShell ISE detection was pulled from:
   # https://adamstech.wordpress.com/2011/05/12/how-to-properly-pause-a-powershell-script/
@@ -46,9 +46,10 @@ Function Pause-Script()
   {
     try
     {
-      Write-Host
       Write-Host -NoNewline 'Press any key to continue...'
-      $x = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+      $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+      Write-Host
+      Write-Host
     }
     catch [System.NotImplementedException]
     {
@@ -56,6 +57,5 @@ Function Pause-Script()
     }
   }
 
-  Write-Host
   Clear-Workspace
 }

@@ -167,7 +167,7 @@ try
 
   if ($areCommonScriptsLoaded)
   {
-    Pause-Script
+    Suspend-Script
   }
 
   $terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initialized"

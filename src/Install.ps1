@@ -80,7 +80,7 @@ Function Install-File()
   else
   {
     Write-Host "File ""$FileName"" already exists."
-    Write-Host
+    $wasOverwritten = $false
 
     if ($AllowOverwrite)
     {
@@ -90,7 +90,6 @@ Function Install-File()
         Write-Host "Invalid Input ($overwrite)..."
         Write-Host
         $overwrite = Read-Host 'Overwrite? Yes (Y), or No (N)'
-        Write-Host
       }
 
       if ($overwrite -ieq 'Y')
@@ -98,16 +97,24 @@ Function Install-File()
         Write-Host $OverwriteMessage
         New-Item -Path $filePath -Type file -Force > $null
         Get-Content ".\$FileName" > $filePath
+        $wasOverwritten = $true
       }
-      elseif ($AllowAppend)
+    }
+    else
+    {
+      Write-Host 'This file may not be overwritten via this install script'
+    }
+
+    if (!$wasOverwritten)
+    {
+      if ($AllowAppend)
       {
         $append = Read-Host "Append? Yes (Y), or No (N)"
         while ($append -ine 'Y' -and $append -ine 'N')
         {
           Write-Host "Invalid Input ($append)..."
           Write-Host
-          $overwrite = Read-Host 'Append? Yes (Y), or No (N)'
-          Write-Host
+          $append = Read-Host 'Append? Yes (Y), or No (N)'
         }
 
         if ($append -ieq 'Y')
@@ -118,9 +125,13 @@ Function Install-File()
           Get-Content ".\$FileName" >> $filePath
         }
       }
-
-      Write-Host
+      else
+      {
+        Write-Host 'This file may not be appended to via this install script'
+      }
     }
+
+    Write-Host
   }
 }
 
@@ -141,5 +152,5 @@ $commonScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\Common.ps1"
 if (Test-Path $commonScriptPath -PathType Leaf)
 {
   . $commonScriptPath
-  Pause-Script
+  Suspend-Script
 }
