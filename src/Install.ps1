@@ -22,6 +22,11 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #>
 
+Function Get-ExecutionPath()
+{
+  return Split-Path $script:MyInvocation.MyCommand.Path
+}
+
 Function Install-File()
 {
   Param (
@@ -69,12 +74,13 @@ Function Install-File()
     $OverwriteMessage = "Overwriting File ""$FileName"""
   }
 
+  $executionPath = Get-ExecutionPath
   $filePath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$FileName"
   if (!(Test-Path $filePath -PathType Leaf))
   {
     Write-Host $CopyMessage
-    New-Item -Path $FilePath -Type file -Force > $null
-    Get-Content ".\$FileName" > $filePath
+    New-Item -Path $filePath -Type file -Force > $null
+    Get-Content "$executionPath\$FileName" > $filePath
     Write-Host
   }
   else
@@ -96,7 +102,7 @@ Function Install-File()
       {
         Write-Host $OverwriteMessage
         New-Item -Path $filePath -Type file -Force > $null
-        Get-Content ".\$FileName" > $filePath
+        Get-Content "$executionPath\$FileName" > $filePath
         $wasOverwritten = $true
       }
     }
@@ -122,7 +128,7 @@ Function Install-File()
           Write-Host 'Now appending file contents'
           Write-Host $CopyMessage
           [System.Environment]::NewLine >> $filePath
-          Get-Content ".\$FileName" >> $filePath
+          Get-Content "$executionPath\$FileName" >> $filePath
         }
       }
       else
