@@ -208,11 +208,6 @@ try
 
   Write-Host
 
-  if ($areCommonUxScriptsLoaded)
-  {
-    Suspend-Script
-  }
-
   $terminal.WindowTitle = "$initialTerminalWindowTitle - Profile Initialized"
 }
 catch
