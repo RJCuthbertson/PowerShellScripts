@@ -167,17 +167,32 @@ try
 
   Write-Host
 
-  if (Get-Module -ListAvailable -Name posh-docker)
+  if (which docker)
   {
-    if (Get-Module -Name posh-docker)
+    Write-Host 'Docker is installed.'
+
+    if (!(Get-Module -ListAvailable -Name posh-docker))
     {
-      Write-Host 'The Posh Docker Module has already been imported.'
+      Write-Host "Installing the posh-docker PS Module."
+      Install-Module -Scope CurrentUser posh-docker
     }
-    else
+
+    if (Get-Module -ListAvailable -Name posh-docker)
     {
-      Import-Module posh-docker
-      Write-Host 'The Posh Docker Module has been imported.'
+      if (Get-Module -Name posh-docker)
+      {
+        Write-Host 'The Posh Docker Module has already been imported.'
+      }
+      else
+      {
+        Import-Module posh-docker
+        Write-Host 'The Posh Docker Module has been imported.'
+      }
     }
+  }
+  else
+  {
+    Write-Host 'Docker is not installed, or is not available to this shell.'
   }
 
   Write-Host
