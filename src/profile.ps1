@@ -89,14 +89,35 @@ try
   Function BashDirs { Get-Location -Stack }
   Set-Alias dirs BashDirs -Option Constant
 
+  Write-Host 'Creating Alias "findf" as recursive file search on all file systems'
+  Function FindFile()
+  {
+    Param (
+      [Parameter(
+        Mandatory=$true,
+        Position=0,
+        ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      [string]
+      $FileFilter
+    )
+
+    Get-PSDrive -PSProvider 'FileSystem' | `
+      % { Get-Volume -DriveLetter $_.Name } | `
+      Where-Object { $_.OperationalStatus -eq 'OK' } | `
+      % { Get-ChildItem -Path "$($_.DriveLetter):\" -Filter $FileFilter -Recurse -Force 2> $null | % { $_.FullName } }
+  }
+  Set-Alias findf FindFile -Option Constant
+
   $regexCmdletName = 'Run-RegexMatchLoop'
   $regexScriptName = 'Regex.ps1'
   $regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
+  Write-Host "Adding cmdlet ""$regexCmdletName"""
   . $regexScriptPath
   Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
   Set-Alias regex $regexCmdletName -Option Constant
 
-  Write-Host 'Creating Alias "touch" as cmdlet "New-Item -Path {arg} -Type file"'
+  Write-Host 'Creating Alias "touch" as "New-Item -Path {arg} -Type file"'
   Function BashTouch()
   {
     Param (
@@ -133,7 +154,7 @@ try
       $GetAll
     )
 
-    $results = Get-Command $CommandName 2>$null
+    $results = Get-Command $CommandName 2> $null
     if ($results -eq $null)
     {
       return $null
@@ -173,17 +194,32 @@ try
 
   Write-Host
 
-  if (Get-Module -ListAvailable -Name posh-docker)
+  if (which docker)
   {
-    if (Get-Module -Name posh-docker)
+    Write-Host 'Docker is installed.'
+
+    if (!(Get-Module -ListAvailable -Name posh-docker))
     {
-      Write-Host 'The Posh Docker Module has already been imported.'
+      Write-Host "Installing the posh-docker PS Module."
+      Install-Module -Scope CurrentUser posh-docker
     }
-    else
+
+    if (Get-Module -ListAvailable -Name posh-docker)
     {
-      Import-Module posh-docker
-      Write-Host 'The Posh Docker Module has been imported.'
+      if (Get-Module -Name posh-docker)
+      {
+        Write-Host 'The Posh Docker Module has already been imported.'
+      }
+      else
+      {
+        Import-Module posh-docker
+        Write-Host 'The Posh Docker Module has been imported.'
+      }
     }
+  }
+  else
+  {
+    Write-Host 'Docker is not installed, or is not available to this shell.'
   }
 
   Write-Host
