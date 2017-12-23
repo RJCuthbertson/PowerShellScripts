@@ -65,6 +65,12 @@ try
   $terminal.BackgroundColor = 'Black'
   $terminal.ForegroundColor = 'Green'
 
+  if ($Host.Version.Major -ge 5)
+  {
+    Set-PSReadlineOption -ResetTokenColors
+    Clear-Host
+  }
+
   Write-Host
   Write-Host ' PowerShell Profile Initialization'
   Write-Host 'Copyright (C) 2017 - RJ Cuthbertson'
