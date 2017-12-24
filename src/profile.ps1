@@ -93,7 +93,7 @@ try
   Set-Alias dirs BashDirs -Option Constant
 
   Write-Host 'Creating Alias "findf" as recursive file search on all file systems'
-  Function FindFile()
+  Function Find-File()
   {
     Param (
       [Parameter(
@@ -110,7 +110,7 @@ try
       Where-Object { $_.OperationalStatus -eq 'OK' } | `
       Where-Object { Get-ChildItem -Path "$($_.DriveLetter):\" -Filter $FileFilter -Recurse -Force 2> $null | Where-Object { $_.FullName } }
   }
-  Set-Alias findf FindFile -Option Constant
+  Set-Alias findf Find-File -Option Constant
 
   $regexCmdletName = 'Run-RegexMatchLoop'
   $regexScriptName = 'Regex.ps1'
@@ -197,6 +197,20 @@ try
 
   Write-Host
 
+  if (!(Get-PackageProvider NuGet))
+  {
+    Write-Host 'Installing the NuGet package provider'
+    Install-PackageProvider NuGet
+    Import-PackageProvider NuGet
+  }
+
+  if (!(Get-PackageProvider PowerShellGet))
+  {
+    Write-Host 'Installing the PowerShellGet package provider'
+    Install-PackageProvider PowerShellGet
+    Import-PackageProvider PowerShellGet
+  }
+
   if (which docker)
   {
     Write-Host 'Docker is installed.'
@@ -223,6 +237,66 @@ try
   else
   {
     Write-Host 'Docker is not installed, or is not available to this shell.'
+  }
+
+  Write-Host
+
+  if (which dotnet)
+  {
+    Write-Host 'The DotNet CLI is installed.'
+
+    if (!(Get-Module -ListAvailable -Name posh-dotnet))
+    {
+      Write-Host "Installing the posh-dotnet PS Module."
+      Install-Module -Scope CurrentUser posh-dotnet
+    }
+
+    if (Get-Module -ListAvailable -Name posh-dotnet)
+    {
+      if (Get-Module -Name posh-dotnet)
+      {
+        Write-Host 'The Posh DotNet Module has already been imported.'
+      }
+      else
+      {
+        Import-Module posh-docker
+        Write-Host 'The Posh DotNet Module has been imported.'
+      }
+    }
+  }
+  else
+  {
+    Write-Host 'The DotNet CLI is not installed, or is not available to this shell.'
+  }
+
+  Write-Host
+
+  if (which git)
+  {
+    Write-Host 'Git is installed.'
+
+    if (!(Get-Module -ListAvailable -Name posh-git))
+    {
+      Write-Host "Installing the posh-git PS Module."
+      Install-Module -Scope CurrentUser posh-git
+    }
+
+    if (Get-Module -ListAvailable -Name posh-git)
+    {
+      if (Get-Module -Name posh-git)
+      {
+        Write-Host 'The Posh Git Module has already been imported.'
+      }
+      else
+      {
+        Import-Module posh-git
+        Write-Host 'The Posh Git Module has been imported.'
+      }
+    }
+  }
+  else
+  {
+    Write-Host 'Git is not installed, or is not available to this shell.'
   }
 
   Write-Host
