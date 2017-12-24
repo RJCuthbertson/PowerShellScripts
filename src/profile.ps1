@@ -76,8 +76,11 @@ try
   Write-Host 'Copyright (C) 2017 - RJ Cuthbertson'
   Write-Host '-----------------------------------'
 
-  Write-Host 'Removing Alias "curl"'
-  Remove-Item alias:curl
+  if (Get-Command curl 2> $null)
+  {
+    Write-Host 'Removing Alias "curl"'
+    Remove-Item alias:curl
+  }
 
   if ($areCommonUxScriptsLoaded)
   {
