@@ -309,9 +309,6 @@ try
     $vsCodePath = $vsCodeInstallLocation + 'Code.exe'
     if (Test-Path $vsCodePath -PathType Leaf)
     {
-      Write-Host 'Creating Alias "code" as shortcut to VS Code'
-      Set-Alias code $vsCodePath -Option Constant
-
       Write-Host 'Creating Alias "vscode" as shortcut to VS Code'
       Set-Alias vscode $vsCodePath -Option Constant
     }
