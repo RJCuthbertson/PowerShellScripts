@@ -106,9 +106,9 @@ try
     )
 
     Get-PSDrive -PSProvider 'FileSystem' | `
-      % { Get-Volume -DriveLetter $_.Name } | `
+      Where-Object { Get-Volume -DriveLetter $_.Name } | `
       Where-Object { $_.OperationalStatus -eq 'OK' } | `
-      % { Get-ChildItem -Path "$($_.DriveLetter):\" -Filter $FileFilter -Recurse -Force 2> $null | % { $_.FullName } }
+      Where-Object { Get-ChildItem -Path "$($_.DriveLetter):\" -Filter $FileFilter -Recurse -Force 2> $null | Where-Object { $_.FullName } }
   }
   Set-Alias findf FindFile -Option Constant
 
