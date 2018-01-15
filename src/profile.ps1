@@ -137,6 +137,83 @@ try
   }
   Set-Alias touch BashTouch -Option Constant
 
+  Write-Host 'Creating Alias "unzip" as .zip archive extraction method'
+  # TODO: move this to common functions file
+  Function Get-NormalizedFilePath()
+  {
+    Param(
+      [Parameter(
+        Mandatory=$true,
+        Position=0,
+        ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      [string]
+      $FilePath
+    )
+
+    $testPath = $FilePath
+    if (![System.IO.Path]::IsPathRooted($FilePath))
+    {
+      $testPath = Join-Path (Get-Location) $FilePath
+    }
+
+    try
+    {
+      $fullPath = [System.IO.Path]::GetFullPath($testPath)
+      if ([System.IO.File]::Exists($fullPath) -or [System.IO.Directory]::Exists($fullPath))
+      {
+        return $fullPath
+      }
+    }
+    catch
+    {
+    }
+
+    return $false
+  }
+
+  Function Expand-ZipArchive()
+  {
+    Param(
+      [Parameter(
+        Mandatory=$true,
+        Position=0,
+        ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      [string]
+      $Source,
+
+      [Parameter(
+        Mandatory=$false,
+        Position=1,
+        ValueFromPipeline=$true)]
+      [string]
+      $Target
+    )
+
+    $fileSystemCompressionAssembly = [AppDomain]::CurrentDomain.GetAssemblies() | `
+      Where-Object { $_.FullName.StartsWith("System.IO.Compression.FileSystem,") }
+
+    if (!$fileSystemCompressionAssembly)
+    {
+      Add-Type -AssemblyName System.IO.Compression.FileSystem
+    }
+
+    if ([string]::IsNullOrEmpty($Target))
+    {
+      $normalizedTarget = Get-Location
+    }
+    else
+    {
+      $normalizedTarget = Get-NormalizedFilePath $Target
+    }
+
+    $normalizedSource = Get-NormalizedFilePath $Source
+
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($normalizedSource, $normalizedTarget)
+  }
+  Set-Alias unzip Expand-ZipArchive -Option Constant
+
   Write-Host 'Creating Alias "which" as use of cmdlet "Get-Command"'
   Function BashWhich()
   {
