@@ -24,33 +24,19 @@
 
 try
 {
-  Function Get-ProgramInstallLocation($programName)
+  $profilePath = $profile.CurrentUserCurrentHost
+  $profileBaseDirectory = $profilePath.Substring(0, $profilePath.LastIndexOf('\'))
+
+  $areCommonScriptsLoaded = $false
+  $commonScriptPath = "$profileBaseDirectory\Common.ps1"
+  if (Test-Path $commonScriptPath -PathType Leaf)
   {
-    $thirtyTwoBitInstalls = `
-      Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
-      Select-Object DisplayName, InstallLocation
-
-    $sixtyFourBitInstalls = `
-    Get-ItemProperty 'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' |`
-      Select-Object DisplayName, InstallLocation
-
-    $allInstalls = $thirtyTwoBitInstalls + $sixtyFourBitInstalls
-
-    ForEach ($install in $allInstalls)
-    {
-      if (![string]::IsNullOrEmpty($install.DisplayName))
-      {
-        $name = $install.DisplayName
-        if ($name.Contains($programName))
-        {
-          return $install.InstallLocation
-        }
-      }
-    }
+    . $commonScriptPath
+    $areCommonScriptsLoaded = $true
   }
 
   $areCommonUxScriptsLoaded = $false
-  $commonUxScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\CommonUX.ps1"
+  $commonUxScriptPath = "$profileBaseDirectory\CommonUX.ps1"
   if (Test-Path $commonUxScriptPath -PathType Leaf)
   {
     . $commonUxScriptPath
@@ -137,82 +123,51 @@ try
   }
   Set-Alias touch BashTouch -Option Constant
 
-  Write-Host 'Creating Alias "unzip" as .zip archive extraction method'
-  # TODO: move this to common functions file
-  Function Get-NormalizedFilePath()
+  if ($areCommonScriptsLoaded)
   {
-    Param(
-      [Parameter(
-        Mandatory=$true,
-        Position=0,
-        ValueFromPipeline=$true)]
-      [ValidateNotNullOrEmpty()]
-      [string]
-      $FilePath
-    )
-
-    $testPath = $FilePath
-    if (![System.IO.Path]::IsPathRooted($FilePath))
+    Write-Host 'Creating Alias "unzip" as .zip archive extraction method'
+    Function Expand-ZipArchive()
     {
-      $testPath = Join-Path (Get-Location) $FilePath
-    }
+      Param(
+        [Parameter(
+          Mandatory=$true,
+          Position=0,
+          ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Source,
 
-    try
-    {
-      $fullPath = [System.IO.Path]::GetFullPath($testPath)
-      if ([System.IO.File]::Exists($fullPath) -or [System.IO.Directory]::Exists($fullPath))
+        [Parameter(
+          Mandatory=$false,
+          Position=1,
+          ValueFromPipeline=$true)]
+        [string]
+        $Target
+      )
+
+      $fileSystemCompressionAssembly = [AppDomain]::CurrentDomain.GetAssemblies() | `
+        Where-Object { $_.FullName.StartsWith("System.IO.Compression.FileSystem,") }
+
+      if (!$fileSystemCompressionAssembly)
       {
-        return $fullPath
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
       }
-    }
-    catch
-    {
-    }
 
-    return $false
+      if ([string]::IsNullOrEmpty($Target))
+      {
+        $normalizedTarget = Get-Location
+      }
+      else
+      {
+        $normalizedTarget = Get-NormalizedFilePath $Target
+      }
+
+      $normalizedSource = Get-NormalizedFilePath $Source
+
+      [System.IO.Compression.ZipFile]::ExtractToDirectory($normalizedSource, $normalizedTarget)
+    }
+    Set-Alias unzip Expand-ZipArchive -Option Constant
   }
-
-  Function Expand-ZipArchive()
-  {
-    Param(
-      [Parameter(
-        Mandatory=$true,
-        Position=0,
-        ValueFromPipeline=$true)]
-      [ValidateNotNullOrEmpty()]
-      [string]
-      $Source,
-
-      [Parameter(
-        Mandatory=$false,
-        Position=1,
-        ValueFromPipeline=$true)]
-      [string]
-      $Target
-    )
-
-    $fileSystemCompressionAssembly = [AppDomain]::CurrentDomain.GetAssemblies() | `
-      Where-Object { $_.FullName.StartsWith("System.IO.Compression.FileSystem,") }
-
-    if (!$fileSystemCompressionAssembly)
-    {
-      Add-Type -AssemblyName System.IO.Compression.FileSystem
-    }
-
-    if ([string]::IsNullOrEmpty($Target))
-    {
-      $normalizedTarget = Get-Location
-    }
-    else
-    {
-      $normalizedTarget = Get-NormalizedFilePath $Target
-    }
-
-    $normalizedSource = Get-NormalizedFilePath $Source
-
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($normalizedSource, $normalizedTarget)
-  }
-  Set-Alias unzip Expand-ZipArchive -Option Constant
 
   Write-Host 'Creating Alias "which" as use of cmdlet "Get-Command"'
   Function BashWhich()
@@ -262,6 +217,32 @@ try
     }
   }
   Set-Alias which BashWhich -Option Constant
+
+  try
+  {
+    if (!((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux).State -eq 'Enabled'))
+    {
+      Write-Host 'Enabling Windows Subsystem for Linux'
+      Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+      Write-Host 'Windows Subsystem for Linux enabled'
+    }
+    else
+    {
+      Write-Host 'Windows Subsystem for Linux is enabled'
+    }
+
+    Write-Host
+  }
+  catch
+  {
+    Write-Host 'Can not detect or enable the Windows Subsystem for Linux'
+  }
+
+  if (!!(which kali))
+  {
+    Write-Host 'To install Kali, please visit https://www.microsoft.com/en-us/store/p/kali-linux/9pkr34tncv07'
+    Write-Host
+  }
 
   # Cheap trick to determine if the NuGet PowerShell CLI is loaded in this shell
   $isNuGetCLILoaded = !!(which Open-PackagePage)
@@ -405,7 +386,8 @@ try
 }
 catch
 {
-  $errorLogPath = "$env:USERPROFILE\My Documents\ProfileScriptErrors.log"
+  $executionPath = Get-ExecutionPath
+  $errorLogPath = "$executionPath\ProfileScriptErrors.log"
   if (!(Test-Path $errorLogPath -PathType Leaf))
   {
     New-Item -Path $errorLogPath -Type file -Force > $null

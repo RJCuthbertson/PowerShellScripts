@@ -75,7 +75,9 @@ Function Install-File()
   }
 
   $executionPath = Get-ExecutionPath
-  $filePath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$FileName"
+  $profilePath = $profile.CurrentUserCurrentHost
+  $profileBaseDirectory = $profilePath.Substring(0, $profilePath.LastIndexOf('\'))
+  $filePath = "$profileBaseDirectory\$FileName"
   if (!(Test-Path $filePath -PathType Leaf))
   {
     Write-Host $CopyMessage
@@ -147,6 +149,7 @@ Install-File 'profile.ps1'`
   -CopyMessage 'Copying Profile Initialization Script'`
   -OverwriteMessage 'Overwriting Profile Initialization Script'`
   -AllowAppend $true
+Install-File 'Common.ps1'
 Install-File 'CommonUX.ps1'
 Install-File 'Regex.ps1'
 
