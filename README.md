@@ -25,6 +25,9 @@ A short explanation of the files in this repository follows:
 * **Regex.ps1:**
   This file houses a single cmdlet, `Run-RegexMatchLoop`, a user input loop that prompts for a Regular Expression and matches lines of a given text document (or the default wordlist).
 
+* **SelfElevatingScriptTemplate.ps1**
+  This is a script template that shows how to auto-elevate a script to be run as an administrator if it was not run with administrator privileges from the start.
+
 ### **Not Scripts (`.(?<!\.ps1)$`)**
 
 * **DefaultWordlist.txt:**
