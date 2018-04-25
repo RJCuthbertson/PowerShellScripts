@@ -20,7 +20,7 @@ A short explanation of the files in this repository follows:
   An installer script to :sparkles: auto-magically :sparkles: copy the scripts and requisite files in this repository to the user profile folder. Just call `.\Install.ps1` and the rest just takes care of itself, as it should.
 
 * **profile.ps1:**
-  A PowerShell profile initialization script (`$PROFILE.CurrentUserAllHosts`) that configures the shell on load. Mostly a bunch of aliasing of BASH commands to their Windows equivalents (or close enough ish).
+  A PowerShell profile initialization script (`$PROFILE.CurrentUserCurrentHost`) that configures the shell on load. Mostly setting up aliases and ensuring helpful modules are loaded.
 
 * **Regex.ps1:**
   This file houses a single cmdlet, `Run-RegexMatchLoop`, a user input loop that prompts for a Regular Expression and matches lines of a given text document (or the default wordlist).
