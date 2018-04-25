@@ -22,27 +22,27 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #>
 
+$profilePath = $PROFILE.CurrentUserAllHosts
+$profileBaseDirectory = $profilePath.Substring(0, $profilePath.LastIndexOf('\'))
+
+$areCommonScriptsLoaded = $false
+$commonScriptPath = "$profileBaseDirectory\Common.ps1"
+if (Test-Path $commonScriptPath -PathType Leaf)
+{
+  . $commonScriptPath
+  $areCommonScriptsLoaded = $true
+}
+
+$areCommonUxScriptsLoaded = $false
+$commonUxScriptPath = "$profileBaseDirectory\CommonUX.ps1"
+if (Test-Path $commonUxScriptPath -PathType Leaf)
+{
+  . $commonUxScriptPath
+  $areCommonUxScriptsLoaded = $true
+}
+
 try
 {
-  $profilePath = $profile.CurrentUserCurrentHost
-  $profileBaseDirectory = $profilePath.Substring(0, $profilePath.LastIndexOf('\'))
-
-  $areCommonScriptsLoaded = $false
-  $commonScriptPath = "$profileBaseDirectory\Common.ps1"
-  if (Test-Path $commonScriptPath -PathType Leaf)
-  {
-    . $commonScriptPath
-    $areCommonScriptsLoaded = $true
-  }
-
-  $areCommonUxScriptsLoaded = $false
-  $commonUxScriptPath = "$profileBaseDirectory\CommonUX.ps1"
-  if (Test-Path $commonUxScriptPath -PathType Leaf)
-  {
-    . $commonUxScriptPath
-    $areCommonUxScriptsLoaded = $true
-  }
-
   $terminal = $Host.UI.RawUI
 
   $initialTerminalWindowTitle = $terminal.WindowTitle
@@ -100,7 +100,7 @@ try
 
   $regexCmdletName = 'Run-RegexMatchLoop'
   $regexScriptName = 'Regex.ps1'
-  $regexScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\$regexScriptName"
+  $regexScriptPath = "$profileBaseDirectory\$regexScriptName"
   Write-Host "Adding cmdlet ""$regexCmdletName"""
   . $regexScriptPath
   Write-Host "Creating Alias ""regex"" as cmdlet ""$regexCmdletName"""
@@ -317,7 +317,7 @@ try
       }
       else
       {
-        Import-Module posh-docker
+        Import-Module posh-dotnet
         Write-Host 'The Posh DotNet Module has been imported.'
       }
     }
@@ -386,12 +386,17 @@ try
 }
 catch
 {
-  $executionPath = Get-ExecutionPath
-  $errorLogPath = "$executionPath\ProfileScriptErrors.log"
-  if (!(Test-Path $errorLogPath -PathType Leaf))
+  if ($areCommonScriptsLoaded)
   {
-    New-Item -Path $errorLogPath -Type file -Force > $null
+    $executionPath = Get-ExecutionPath
+    $errorLogPath = "$executionPath\ProfileScriptErrors.log"
+    if (!(Test-Path $errorLogPath -PathType Leaf))
+    {
+      New-Item -Path $errorLogPath -Type file -Force > $null
+    }
+
+    $_ >> $errorLogPath
   }
 
-  $_ >> $errorLogPath
+  Write-Host $_.Exception
 }

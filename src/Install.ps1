@@ -22,6 +22,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #>
 
+$profilePath = $PROFILE.CurrentUserAllHosts
+$profileBaseDirectory = $profilePath.Substring(0, $profilePath.LastIndexOf('\'))
+
 Function Get-ExecutionPath()
 {
   return Split-Path $script:MyInvocation.MyCommand.Path
@@ -75,8 +78,7 @@ Function Install-File()
   }
 
   $executionPath = Get-ExecutionPath
-  $profilePath = $profile.CurrentUserCurrentHost
-  $profileBaseDirectory = $profilePath.Substring(0, $profilePath.LastIndexOf('\'))
+
   $filePath = "$profileBaseDirectory\$FileName"
   if (!(Test-Path $filePath -PathType Leaf))
   {
@@ -152,12 +154,13 @@ Install-File 'profile.ps1'`
 Install-File 'Common.ps1'
 Install-File 'CommonUX.ps1'
 Install-File 'Regex.ps1'
+Install-File 'Win10Customization.ps1'
 
 Install-File 'DefaultWordlist.txt'`
   -CopyMessage 'Copying Default Wordlist'`
   -AllowOverwrite $false
 
-$commonUxScriptPath = "$env:USERPROFILE\My Documents\WindowsPowerShell\CommonUX.ps1"
+$commonUxScriptPath = "$profileBaseDirectory\CommonUX.ps1"
 if (Test-Path $commonUxScriptPath -PathType Leaf)
 {
   . $commonUxScriptPath

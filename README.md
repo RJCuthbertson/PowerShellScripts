@@ -20,13 +20,16 @@ A short explanation of the files in this repository follows:
   An installer script to :sparkles: auto-magically :sparkles: copy the scripts and requisite files in this repository to the user profile folder. Just call `.\Install.ps1` and the rest just takes care of itself, as it should.
 
 * **profile.ps1:**
-  A PowerShell profile initialization script (`$PROFILE.CurrentUserCurrentHost`) that configures the shell on load. Mostly setting up aliases and ensuring helpful modules are loaded.
+  A PowerShell profile initialization script (`$PROFILE.CurrentUserAllHosts`) that configures the shell on load. Mostly setting up aliases and ensuring helpful modules are loaded.
 
 * **Regex.ps1:**
   This file houses a single cmdlet, `Run-RegexMatchLoop`, a user input loop that prompts for a Regular Expression and matches lines of a given text document (or the default wordlist).
 
 * **SelfElevatingScriptTemplate.ps1**
   This is a script template that shows how to auto-elevate a script to be run as an administrator if it was not run with administrator privileges from the start.
+
+* **Win10Customization.ps1:**
+  This script automates some of the tasks related to customization of Windows 10 that I've found myself performing multiple times.
 
 ### **Not Scripts (`.(?<!\.ps1)$`)**
 

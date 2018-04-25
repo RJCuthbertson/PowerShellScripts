@@ -401,7 +401,7 @@ Function Reset-SessionProfile()
   }
 
   $PROFILE | Get-Member -MemberType NoteProperty | Select-Object Name | `
-    ForEach-Object { Reset-ProfileIfExists $profile.($_.Name) }
+    ForEach-Object { Reset-ProfileIfExists $PROFILE.($_.Name) }
 }
 
 Function Set-RegistryKeyValue()
